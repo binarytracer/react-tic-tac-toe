@@ -5,11 +5,6 @@ import Log from "./components/Log";
 import { WINNING_COMBINATIONS } from "./winning-combinations";
 import GameOver from "./components/GameOver";
 
-const players = [
-  { name: "Player 01", symbol: "X" },
-  { name: "Player 02", symbol: "O" },
-];
-
 const initialGameBoard = [
   [null, null, null],
   [null, null, null],
@@ -27,6 +22,16 @@ function deriveActivePlayer(turns) {
 }
 
 function App() {
+  const [players, setPlayers] = useState({
+    X: "Player 01",
+    O: "Player 02",
+  });
+
+  const playerInfos = Object.keys(players).map((key) => ({
+    symbol: key,
+    name: players[key],
+  }));
+
   const [gameTurns, setGameTurn] = useState([]);
   const activePlayer = deriveActivePlayer(gameTurns);
 
@@ -43,13 +48,20 @@ function App() {
 
   // check winners
   for (const combination of WINNING_COMBINATIONS) {
-    const firstSquare = gameBoard[combination[0].row][combination[0].column];
-    const secondSquare = gameBoard[combination[1].row][combination[1].column];
-    const thirdSquare = gameBoard[combination[2].row][combination[2].column];
+    const firstSquareSymbol =
+      gameBoard[combination[0].row][combination[0].column];
+    const secondSquareSymbol =
+      gameBoard[combination[1].row][combination[1].column];
+    const thirdSquareSymbol =
+      gameBoard[combination[2].row][combination[2].column];
 
-    if (firstSquare) {
-      if (firstSquare === secondSquare && firstSquare === thirdSquare) {
-        winner = firstSquare;
+    if (firstSquareSymbol) {
+      if (
+        firstSquareSymbol === secondSquareSymbol &&
+        firstSquareSymbol === thirdSquareSymbol
+      ) {
+        winner = players[firstSquareSymbol];
+
         continue;
       }
     }
@@ -67,26 +79,34 @@ function App() {
       ];
     });
   }
+
+  function handleRestart() {
+    setGameTurn(() => []);
+  }
+
+  function handlePlayerNameChange(symbol, newName) {
+    setPlayers((prevPlayerNames) => ({
+      ...prevPlayerNames,
+      [symbol]: newName,
+    }));
+  }
+
   return (
     <main>
       <div id="game-container">
         <ol id="players" className="highlight-player">
-          {players.map((player, playerIndex) => (
+          {playerInfos.map((player, playerIndex) => (
             <Player
               key={playerIndex}
               {...player}
               isActive={activePlayer === player.symbol}
+              onChangeName={handlePlayerNameChange}
             />
           ))}
         </ol>
 
         {(winner || hasDraw) && (
-          <GameOver
-            winner={winner}
-            onRestart={() => {
-              setGameTurn([]);
-            }}
-          />
+          <GameOver winner={winner} onRestart={() => handleRestart()} />
         )}
 
         <GameBoard
