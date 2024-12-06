@@ -5,7 +5,12 @@ import Log from "./components/Log";
 import { WINNING_COMBINATIONS } from "./winning-combinations";
 import GameOver from "./components/GameOver";
 
-const initialGameBoard = [
+const INITIAL_PLAYER_INFO = {
+  X: "Player 01",
+  O: "Player 02",
+};
+
+const INITIAL_GAME_BOARD = [
   [null, null, null],
   [null, null, null],
   [null, null, null],
@@ -21,32 +26,21 @@ function deriveActivePlayer(turns) {
   return currentPlayer;
 }
 
-function App() {
-  const [players, setPlayers] = useState({
-    X: "Player 01",
-    O: "Player 02",
-  });
+function deriveGameBoard(gameTurns) {
+  let gameBoard = [...INITIAL_GAME_BOARD.map((elem) => [...elem])];
 
-  const playerInfos = Object.keys(players).map((key) => ({
-    symbol: key,
-    name: players[key],
-  }));
-
-  const [gameTurns, setGameTurn] = useState([]);
-  const activePlayer = deriveActivePlayer(gameTurns);
-
-  let gameBoard = [...initialGameBoard.map((elem) => [...elem])];
-
-  // gameBoard value change based on gameTurns
   for (const gameTurn of gameTurns) {
     const { square, player } = gameTurn;
     const { row, col } = square;
     gameBoard[row][col] = player;
   }
 
-  let winner = null;
+  return gameBoard;
+}
 
-  // check winners
+function deriveWinner(gameBoard, players) {
+  let winner;
+
   for (const combination of WINNING_COMBINATIONS) {
     const firstSquareSymbol =
       gameBoard[combination[0].row][combination[0].column];
@@ -61,12 +55,26 @@ function App() {
         firstSquareSymbol === thirdSquareSymbol
       ) {
         winner = players[firstSquareSymbol];
-
         continue;
       }
     }
   }
 
+  return winner;
+}
+
+function App() {
+  const [players, setPlayers] = useState(INITIAL_PLAYER_INFO);
+  const playerInfos = Object.keys(players).map((key) => ({
+    symbol: key,
+    name: players[key],
+  }));
+
+  const [gameTurns, setGameTurn] = useState([]);
+  const activePlayer = deriveActivePlayer(gameTurns);
+  const gameBoard = deriveGameBoard(gameTurns);
+
+  const winner = deriveWinner(gameBoard, players);
   const hasDraw = gameTurns.length === 9 && !winner;
 
   function handleSelectedSquare(rowIndex, colIndex) {
